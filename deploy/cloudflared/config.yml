@@ -1,0 +1,25 @@
+# Cloudflare Tunnel Configuration for AVEON Robotics
+# This allows your Vercel-hosted HTTPS Web Application to communicate securely
+# with your local FastAPI Computer Vision & Serial Edge server without browser Mixed-Content errors.
+
+tunnel: <YOUR-TUNNEL-UUID>
+credentials-file: /path/to/<YOUR-TUNNEL-UUID>.json
+
+ingress:
+  # Fast-API WebSocket Telemetry
+  - hostname: api-robotics.yourdomain.com
+    path: /ws/*
+    service: ws://localhost:8000
+    originRequest:
+      noTLSVerify: true
+
+  # Fast-API REST Endpoints & Camera Stream Proxy
+  - hostname: api-robotics.yourdomain.com
+    path: /api/*
+    service: http://localhost:8000
+    originRequest:
+      noTLSVerify: true
+      connectTimeout: 10s
+
+  # Fallback 404
+  - service: http_status:404

@@ -1,0 +1,41 @@
+# AVEON Local & Edge HTTPS Reverse Proxy
+# Usage: caddy run --config Caddyfile
+
+localhost, aveon.local {
+    # Automatic self-signed local TLS
+    tls internal
+
+    # Security Headers
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+
+    # API Endpoints -> FastAPI Backend
+    handle /api/* {
+        reverse_proxy 127.0.0.1:8000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote}
+        }
+    }
+
+    # WebSocket Telemetry Channel
+    handle /ws/* {
+        reverse_proxy 127.0.0.1:8000 {
+            header_up Upgrade {>Upgrade}
+            header_up Connection {>Connection}
+        }
+    }
+
+    # Frontend Single-Page App (Dev Server or Static Dist)
+    handle {
+        reverse_proxy 127.0.0.1:5173
+    }
+
+    log {
+        output stdout
+        format console
+    }
+}
